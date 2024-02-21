@@ -6,7 +6,6 @@ import (
 	"go.k6.io/k6/js/modules"
 )
 
-//
 func init() {
 	modules.Register("k6/x/tarantool", new(Tarantool))
 }
@@ -122,5 +121,19 @@ func (Tarantool) Eval(conn *multi.ConnectionMulti, expr string, args interface{}
 	if err != nil {
 		return nil, err
 	}
+	return resp, err
+}
+
+func (Tarantool) CallVersion(conn *multi.ConnectionMulti) (*tarantool.Response, error) {
+	type Version struct {
+		picodata string
+		procApi  string
+	}
+
+	resp, err := conn.Call(".proc_version_info", []interface{}{})
+	if err != nil {
+		return nil, err
+	}
+	resp.Data = []interface{}{resp.Data[0].(map[any]any)["picodata_version"].(string), resp.Data[0].(map[any]any)["proc_api_version"].(string)}
 	return resp, err
 }
